@@ -223,19 +223,8 @@ function toggleTheme() {
 async function detectLocation() {
     showLoading();
     try {
-        if (navigator.geolocation) {
-          const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 5000,
-              maximumAge: 60000,
-              enableHighAccuracy: false,
-            });
-          });
-          await processGeolocation(position);
-        } else {
-          console.warn('Geolocation is not supported. Falling back to IP-based location.');
-          await getLocationFromIp();
-        }
+        const location = await getLocation();
+        await processGeolocation(location);
     } catch (error) {
         console.error('Failed to get location:', error);
         await getLocationFromIp(); // Fallback to IP
@@ -244,12 +233,52 @@ async function detectLocation() {
     }
 }
 
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation is not supported by your browser'));
+            return;
+        }
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000, // 10 seconds
+            maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+            },
+            (error) => {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        reject(new Error('User denied the request for Geolocation.'));
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        reject(new Error('Location information is unavailable.'));
+                        break;
+                    case error.TIMEOUT:
+                        reject(new Error('The request to get user location timed out.'));
+                        break;
+                    default:
+                        reject(new Error('An unknown error occurred.'));
+                }
+            },
+            options
+        );
+    });
+}
+
 /**
  * Processes geolocation data to determine the city and updates the UI.
- * @param {GeolocationPosition} position - Geolocation data from the browser.
+ * @param {Object} location - Geolocation data from the browser.
  */
-async function processGeolocation(position) {
-    const { latitude, longitude } = position.coords;
+async function processGeolocation(location) {
+    const { latitude, longitude } = location;
     try {
         const response = await fetch(`${GEOCODING_URL}lat=${latitude}&lon=${longitude}&zoom=10&accept-language=tr`);
         const data = await response.json();
