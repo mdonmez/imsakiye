@@ -1,0 +1,1259 @@
+/* --- Global Variables (Dark and Light) --- */
+:root {
+    /* Dark Theme Variables */
+    --primary-color: #e29e54;
+    --bg-color: #0e0e0e;
+    --container-bg: #1a1a1a;
+    --text-color: #fff;
+    --accent-color: rgba(226, 158, 84, 0.8);
+    --border-color: rgba(255, 255, 255, 0.05);
+
+    /* Light Theme Variables */
+    --light-bg-color: #f8f9fa;
+    --light-text-color: #212529;
+    --light-container-bg: #fff;
+    --light-border-color: #dee2e6;
+    --light-accent-color: #e29e54;
+    --light-secondary-bg: #e9ecef;
+    --light-input-bg: #fff;
+    --light-scrollbar-thumb: #adb5bd; /* Light scrollbar thumb */
+    --light-scrollbar-track: #f1f3f5; /* Light scrollbar track */
+}
+
+/* --- Basic Reset and Common Styles --- */
+html {
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+    margin: 0;  
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    line-height: 1.6;
+    font-size: 16px;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease;
+}
+
+/* --- Container Styles --- */
+.container {
+    background-color: var(--container-bg);
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+    padding: clamp(1.2rem, 4vw, 2.5rem);
+    width: min(90%, 500px);
+    position: relative;
+    border: 1px solid var(--border-color);
+    margin: clamp(0.5rem, 3vw, 1rem);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* --- Typography --- */
+.app-title {
+    text-align: center;
+    margin-bottom: 1.8rem;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    position: relative;
+    width: 100%;
+    display: inline-block;
+}
+
+.app-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25%;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(226, 158, 84, 0), var(--accent-color), rgba(226, 158, 84, 0));
+    border-radius: 2px;
+}
+
+/* --- Location and Time Info --- */
+.location-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.location-search-container, .iftar-time {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.location-search-container:hover,
+.location-search-container:focus-within {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.location-search-container {
+    margin-right: 0.8rem;
+    position: relative;
+    flex: 1;
+    cursor: pointer;
+}
+
+.location-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: none;
+    margin-top: 0.5rem;
+    background-color: #212121;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.location-dropdown.active {
+    display: block;
+}
+
+.location-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(226, 158, 84, 0.15);
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    position: relative;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.location-button:hover,
+.location-button:focus {
+    background-color: rgba(226, 158, 84, 0.3);
+    transform: scale(1.05);
+    outline: none;
+}
+
+.location-button:active {
+    transform: scale(0.95);
+}
+
+.location-button i {
+    font-size: 0.9rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#location-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.2;
+    letter-spacing: 0.2px;
+    transition: width 0.2s ease;
+}
+
+.iftar-time {
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.location-search-container i,
+.iftar-time i {
+    margin-right: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+/* --- Location Search Input --- */
+#location-search {
+    width: 100%;
+    background-color: #2a2a2a;
+    border: none;
+    border-radius: 6px 6px 0 0;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+}
+
+#location-search:focus {
+    background-color: #333;
+    box-shadow: inset 0 0 0 1px rgba(226, 158, 84, 0.3);
+}
+
+#location-search::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Search Results --- */
+.search-results {
+    position: relative;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 10;
+    background-color: #1e1e1e;
+    border-radius: 0 0 6px 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #555 #222;
+}
+
+.search-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 0 0 6px 0;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-item {
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.15s ease;
+}
+
+.search-item:last-child {
+    border-bottom: none;
+}
+
+.search-item:hover,
+.search-item.selected {
+    background-color: rgba(200, 121, 65, 0.15);
+}
+
+.search-item .highlight {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: rgba(226, 158, 84, 0.4);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+/* --- Spinner --- */
+.spinner {
+    margin-top: 1rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-out, height 0.3s ease-out, margin 0.3s ease-out;
+    height: 0;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(20, 20, 20, 0.8), var(--primary-color), rgba(20, 20, 20, 0.8));
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+.spinner.loading {
+    opacity: 0.9;
+    height: 3px;
+    margin: 1.2rem auto;
+}
+
+.spinner.loading + .countdown-container,
+.container:has(.spinner.loading) {
+    transform: scale(1.01);
+}
+
+@keyframes loading {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- Countdown Container --- */
+.countdown-container {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 1.8rem;
+    margin-top: 1.2rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.15);
+}
+
+.result {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 500;
+}
+
+#countdown-type {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* --- Time Blocks --- */
+.time-blocks {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0.7rem;
+    position: relative;
+}
+
+.time-value {
+    font-size: 3.2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-color);
+    margin-bottom: 0.8rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.time-value::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px;
+    height: 2px;
+    background-color: rgba(226, 158, 84, 0.3);
+    border-radius: 1px;
+}
+
+.time-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.time-separator {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0.3rem;
+    line-height: 1;
+    position: relative;
+    top: -0.5rem;
+    opacity: 0.8;
+}
+
+/* --- Footer --- */
+.footer {
+    text-align: center;
+    margin-top: 2.5rem;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.7);
+    position: relative;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- Iftar Now Message --- */
+.iftar-now {
+    display: none;
+    color: #fff;
+    font-size: 1.7rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    animation: pulse 1.5s infinite;
+    background: linear-gradient(90deg, var(--primary-color), #c87941, var(--primary-color));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.iftar-now.active {
+    display: block;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* --- Utility Classes --- */
+.hidden {
+    display: none;
+}
+
+/* --- Animation styles for the countdown timer --- */
+.time-change {
+    animation: timeChange 0.2s ease-in-out;
+}
+
+@keyframes timeChange {
+    0% {
+        transform: translateY(-5px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.iftar-highlight {
+    animation: iftarHighlight 3s ease-out;
+}
+
+@keyframes iftarHighlight {
+    0% {
+        background-color: rgba(226, 158, 84, 0);
+        transform: scale(1);
+    }
+    20% {
+        background-color: rgba(226, 158, 84, 0.15);
+        transform: scale(1.03);
+    }
+    80% {
+        background-color: rgba(226, 158, 84, 0.15);
+        transform: scale(1.03);
+    }
+    100% {
+        background-color: rgba(226, 158, 84, 0);
+        transform: scale(1);
+    }
+}
+
+/* --- Theme Toggle Styles --- */
+.theme-toggle-container {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+}
+
+.theme-toggle {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+    transform-origin: center;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+    transform: scale(1.05);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+body.light-theme .theme-toggle {
+    color: var(--light-accent-color);
+}
+
+body.light-theme .theme-toggle:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+}
+
+/* --- Info Toggle Styles --- */
+.info-toggle-container {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+}
+
+.info-toggle {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+    transform-origin: center;
+}
+
+/* Info Toggle Expanded State */
+.info-toggle.expanded {
+    width: auto !important;
+    padding: 8px 16px !important;
+    border-radius: 50px !important;
+    /* min-width: 200px; */
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.info-toggle.expanded:hover {
+    transform: scale(1);
+}
+
+.info-toggle.expanded i {
+    display: none;
+}
+
+.info-toggle:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+    transform: scale(1.05);
+}
+
+.info-toggle:active {
+    transform: scale(0.95);
+}
+
+body.light-theme .info-toggle {
+    color: var(--light-accent-color);
+}
+
+body.light-theme .info-toggle:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+}
+
+/* --- Responsive Design --- */
+
+/* Extra small phones */
+@media (max-width: 320px) {
+    body {
+        font-size: 14px;
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+
+    .container {
+        padding: 1rem;
+        width: 90%;
+        border-radius: 10px;
+        margin: 0.4rem;
+    }
+
+    .app-title {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .app-title::after {
+        width: 40px;
+        bottom: -8px;
+    }
+
+    .time-value {
+        font-size: 2rem;
+    }
+
+    .time-separator {
+        font-size: 1.6rem;
+    }
+
+    .time-label {
+        font-size: 0.65rem;
+    }
+
+    .countdown-container {
+        padding: 1rem;
+        margin-top: 0.8rem;
+    }
+
+    .result {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .location-info {
+        flex-direction: column;
+        margin-bottom: 1.2rem;
+    }
+
+    .location-search-container,
+    .iftar-time {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.7rem;
+        box-sizing: border-box;
+    }
+
+    .iftar-time {
+        margin-bottom: 0;
+    }
+
+    .location-search-container i, .iftar-time i {
+        margin-right: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .location-search-container, .iftar-time {
+        padding: 0.5rem 0.6rem;
+    }
+
+    .footer {
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+    }
+
+    .iftar-now {
+        font-size: 1.4rem;
+    }
+}
+
+/* Small phones */
+@media (min-width: 321px) and (max-width: 360px) {
+    body {
+        font-size: 15px;
+        align-items: flex-start;
+        padding-top: 2.5rem;
+    }
+
+    .container {
+        padding: 1.2rem;
+        width: 92%;
+        border-radius: 12px;
+        transform: scale(0.98);
+    }
+
+    .app-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .time-value {
+        font-size: 2.2rem;
+    }
+
+    .time-separator {
+        font-size: 1.8rem;
+    }
+
+    .time-label {
+        font-size: 0.7rem;
+    }
+
+    .countdown-container {
+        padding: 1.1rem;
+    }
+
+    .result {
+        font-size: 1.1rem;
+    }
+
+    .location-info {
+        flex-direction: column;
+        margin-bottom: 1.3rem;
+    }
+
+    .location-search-container,
+    .iftar-time {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.7rem;
+        box-sizing: border-box;
+    }
+
+    .iftar-time {
+        margin-bottom: 0;
+    }
+}
+
+/* Medium-sized phones */
+@media (min-width: 361px) and (max-width: 480px) {
+    body {
+        align-items: flex-start;
+        padding-top: 3rem;
+    }
+
+    .container {
+        padding: 1.5rem;
+        width: 92%;
+        border-radius: 14px;
+        margin: 0.6rem;
+    }
+
+    .app-title {
+        font-size: 1.6rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .app-title::after {
+        width: 55px;
+    }
+
+    .time-value {
+        font-size: 2.5rem;
+    }
+
+    .time-label {
+        font-size: 0.75rem;
+    }
+
+    .countdown-container {
+        padding: 1.4rem;
+        margin-top: 1rem;
+    }
+
+    .result {
+        font-size: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .location-info {
+        flex-direction: column;
+        margin-bottom: 1.5rem;
+    }
+
+    .location-search-container,
+    .iftar-time {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.8rem;
+        box-sizing: border-box;
+    }
+
+    .iftar-time {
+        margin-bottom: 0;
+    }
+
+    /* Enhanced touch targets for mobile */
+    .location-button {
+        width: 2.2rem;
+        height: 2.2rem;
+    }
+
+    .location-button i {
+        font-size: 0.9rem;
+    }
+
+    /* Better spacing for touch targets */
+    .time-block {
+        padding: 0 0.4rem;
+    }
+}
+
+/* Landscape Mode Optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        align-items: flex-start;
+        padding: 0.5rem 0 0 0;
+        font-size: 15px;
+    }
+
+    .container {
+        padding: 1.2rem;
+        margin: 0.3rem;
+        transform: scale(0.9);
+        transform-origin: top center;
+        max-width: 450px;
+    }
+
+    .app-title {
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .location-info {
+        margin-bottom: 1rem;
+        flex-direction: column;
+    }
+
+    .location-search-container,
+    .iftar-time {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.6rem;
+        padding: 0.4rem 0.6rem;
+        box-sizing: border-box;
+    }
+
+    .iftar-time {
+        margin-bottom: 0;
+    }
+
+    .countdown-container {
+        padding: 1rem;
+        margin-top: 0.6rem;
+    }
+
+    .time-value {
+        font-size: 2.2rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .time-separator {
+        font-size: 2rem;
+    }
+
+    .footer {
+        margin-top: 1rem;
+        padding-top: 0.7rem;
+        font-size: 0.85rem;
+    }
+
+    .time-blocks {
+        justify-content: space-evenly; /* Better spacing in landscape */
+    }
+}
+
+/* Tablets and Larger Phones */
+@media (min-width: 481px) and (max-width: 768px) {
+    body {
+        align-items: flex-start;
+        padding-top: 3.5rem;
+    }
+
+    .container {
+        padding: 2rem;
+        max-width: 90%;
+    }
+
+    .time-value {
+        font-size: 3rem;
+    }
+}
+
+/* --- Light Mode --- */
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: var(--light-bg-color);
+        color: var(--light-text-color);
+    }
+
+    .container {
+        background-color: var(--light-container-bg);
+        border-color: var(--light-border-color);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .app-title,
+    .time-value {
+        color: var(--light-text-color);
+        text-shadow: none;
+    }
+
+    .location-search-container,
+    .iftar-time,
+    .countdown-container {
+        background-color: var(--light-secondary-bg);
+        border: 1px solid var(--light-border-color);
+    }
+
+    .location-search-container:hover,
+    .location-search-container:focus-within {
+        background-color: #dfe3e7;
+        border-color: #ced4da;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    #location-search {
+        background-color: var(--light-input-bg);
+        color: var(--light-text-color);
+        border-bottom: 1px solid var(--light-border-color);
+    }
+
+    #location-search:focus {
+        background-color: var(--light-input-bg);
+        box-shadow: 0 0 0 2px rgba(226, 158, 84, 0.5);
+    }
+
+    #location-search::placeholder {
+        color: #6c757d;
+    }
+
+    .location-dropdown {
+        background-color: #fff;
+        border: 1px solid var(--light-border-color);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-results {
+        background-color: #f8f8f8;
+        /* Light Theme Scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--light-scrollbar-thumb) var(--light-scrollbar-track);
+    }
+
+    .search-results::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .search-results::-webkit-scrollbar-track {
+        background: var(--light-scrollbar-track);
+        border-radius: 0 0 6px 0;
+    }
+
+    .search-results::-webkit-scrollbar-thumb {
+        background-color: var(--light-scrollbar-thumb);
+        border-radius: 4px;
+    }
+
+    .search-item:hover,
+    .search-item.selected {
+        background-color: var(--light-secondary-bg);
+    }
+
+    .time-label {
+        color: rgba(0, 0, 0, 0.7);
+    }
+
+    .result {
+        color: rgba(0, 0, 0, 0.9);
+    }
+
+    .footer {
+        color: rgba(0, 0, 0, 0.7);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .footer a {
+        color: #c87941;
+    }
+
+    .footer a:hover {
+        background-color: rgba(200, 121, 65, 0.1);
+    }
+
+      .theme-toggle {
+        color: var(--light-accent-color);  /*Use light accent color in the light theme*/
+    }
+}
+/* --- Light Theme Class --- */
+body.light-theme {
+    background-color: var(--light-bg-color);
+    color: var(--light-text-color);
+}
+
+body.light-theme .container {
+    background-color: var(--light-container-bg);
+    border-color: var(--light-border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly softer shadow */
+}
+/*Improved styling of location search container and iftar time */
+body.light-theme .location-search-container,
+body.light-theme .iftar-time {
+    background-color: var(--light-secondary-bg); /* Use a slightly darker gray */
+    border-color: var(--light-border-color);
+    color: var(--light-text-color);
+}
+
+body.light-theme .location-search-container:hover,
+body.light-theme .location-search-container:focus-within {
+    background-color: #dfe3e7; /* Slightly darker on hover/focus */
+    border-color: #ced4da; /* Darker border on hover/focus */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme #location-search {
+    background-color: var(--light-input-bg); /* White background */
+    color: var(--light-text-color);
+    border-bottom: 1px solid var(--light-border-color);
+}
+
+body.light-theme #location-search:focus {
+    background-color: var(--light-input-bg); /* Keep white on focus */
+    box-shadow: 0 0 0 2px rgba(226, 158, 84, 0.5);
+}
+
+body.light-theme #location-search::placeholder {
+    color: #6c757d;
+}
+
+body.light-theme .location-dropdown {
+    background-color: #fff;
+    border: 1px solid var(--light-border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Light Theme Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--light-scrollbar-thumb) var(--light-scrollbar-track);
+}
+
+body.light-theme .location-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+body.light-theme .location-dropdown::-webkit-scrollbar-track {
+    background: var(--light-scrollbar-track);
+    border-radius: 0 0 6px 0;
+}
+
+body.light-theme .location-dropdown::-webkit-scrollbar-thumb {
+    background-color: var(--light-scrollbar-thumb);
+    border-radius: 4px;
+}
+
+body.light-theme .search-result-item {
+    border-bottom: 1px solid var(--light-border-color);
+}
+
+body.light-theme .search-result-item:hover {
+    background-color: var(--light-secondary-bg); /* Light gray on hover */
+}
+
+body.light-theme .search-result-item.selected {
+    background-color: rgba(226, 158, 84, 0.2); /* Slightly darker highlight */
+}
+
+/* Theme Toggle Styles (Adjusted for Light Theme)*/
+body.light-theme .theme-toggle-container {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+}
+
+body.light-theme .theme-toggle {
+    background-color: transparent;
+    border: none;
+    color: var(--light-accent-color);  /*Use light accent color in the light theme*/
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+}
+
+body.light-theme .theme-toggle:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+    transform: scale(1.05);
+}
+
+body.light-theme .theme-toggle:active {
+    transform: scale(0.95);
+}
+/*Other light theme styles*/
+
+body.light-theme .app-title,
+body.light-theme .time-value {
+    color: var(--light-text-color);
+    text-shadow: none; /* Remove text shadow in light mode */
+}
+
+body.light-theme .location-search-container,
+body.light-theme .iftar-time,
+body.light-theme .countdown-container {
+    background-color: var(--light-secondary-bg);  /* Use a consistent secondary background */
+    border: 1px solid var(--light-border-color);
+}
+
+body.light-theme #location-search:focus {
+    background-color: #e8e8e8; /* This was already defined, but keeping it here for completeness */
+}
+
+body.light-theme .search-results {
+    background-color: #f8f8f8;
+     /* Light Theme Scrollbar - Already Defined in prefers-color-scheme, but good to have here too */
+    scrollbar-width: thin;
+    scrollbar-color: var(--light-scrollbar-thumb) var(--light-scrollbar-track);
+}
+body.light-theme .search-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+body.light-theme .search-results::-webkit-scrollbar-track {
+    background: var(--light-scrollbar-track);
+    border-radius: 0 0 6px 0;  /*Consistent border-radius*/
+}
+
+body.light-theme .search-results::-webkit-scrollbar-thumb {
+    background-color: var(--light-scrollbar-thumb);
+    border-radius: 4px;
+}
+body.light-theme .search-item:hover,
+body.light-theme .search-item.selected {
+    background-color: rgba(226, 158, 84, 0.1);  /*Consistent with other selected item styles */
+}
+
+
+body.light-theme .time-label {
+    color: rgba(0, 0, 0, 0.7); /*Darker color for labels*/
+}
+
+body.light-theme .result {
+    color: rgba(0, 0, 0, 0.9);  /*Darker color for result text*/
+}
+
+body.light-theme .footer {
+    color: rgba(0, 0, 0, 0.7);  /*Darker color for footer text*/
+    border-top: 1px solid rgba(0, 0, 0, 0.1); /*More visible border*/
+}
+body.light-theme .footer a {
+    color: #c87941; /*Consistent accent color*/
+}
+
+body.light-theme .footer a:hover {
+    background-color: rgba(200, 121, 65, 0.1); /*Consistent hover style*/
+}
+
+body.light-theme .spinner.loading {
+  background: linear-gradient(90deg, #eee, var(--primary-color), #eee); /* Lighter spinner */
+}
+
+body.light-theme .time-separator {
+    color: var(--light-accent-color); /* Use accent color for consistency */
+}
+
+body.light-theme .location-button {
+  background-color: rgba(226, 158, 84, 0.1); /* Lighter background */
+}
+
+body.light-theme .location-button:hover,
+body.light-theme .location-button:focus {
+  background-color: rgba(226, 158, 84, 0.2); /* Slightly darker on hover/focus */
+}
+
+body.light-theme .iftar-now {
+  background: linear-gradient(90deg, var(--light-accent-color), #c87941, var(--light-accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+     background-clip: text;
+}
+body.light-theme .search-item .highlight {
+    color: var(--light-accent-color);  /* Use accent color for consistency */
+  text-decoration-color: rgba(226, 158, 84, 0.4); /* Match dark theme highlight style*/
+}
+
+.info-circle {
+  transition: width 0.3s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* --- Accessibility Enhancements --- */
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .spinner.loading + .countdown-container,
+    .container:has(.spinner.loading) {
+        transform: none;
+    }
+
+    .iftar-now {
+        animation: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .time-value::after,
+    .app-title::after {
+        background-color: CanvasText; /* Use system color */
+    }
+
+    .time-separator,
+    .location-search-container i,
+    .iftar-time i,
+    #countdown-type {
+        color: CanvasText;
+    }
+    .theme-toggle { /* Ensure theme toggle is visible in high contrast mode */
+      color: CanvasText !important;
+      border: 2px solid CanvasText !important;
+    }
+}
+
+/* --- Print Styles --- */
+@media print {
+    body {
+        background-color: white;
+        color: black;
+    }
+
+    .container {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        max-width: 100%;
+    }
+
+    .location-button,
+    .location-dropdown,
+    .spinner,
+    .theme-toggle-container {
+        display: none !important;
+    }
+}
+/* --- GitHub link styling --- */
+.footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    position: relative;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.footer a:hover {
+    background-color: rgba(226, 158, 84, 0.15);
+}

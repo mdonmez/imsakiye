@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İmsakiye</title>
+    <meta name="description" content="Ramazan ayı için iftar ve sahur vakitlerini gösteren, konum tabanlı uygulama">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+</head>
+<body>
+    <main class="container">
+        <h1 class="app-title">İmsakiye</h1>
+
+        <div class="location-info">
+            <div class="location-search-container" role="button" tabindex="0" aria-label="Konum seçiniz">
+                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                <span id="location-text"></span>
+                <button id="location-button" class="location-button" title="Konumu algıla" aria-label="Konumu otomatik algıla">
+                    <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                </button>
+                <div class="location-dropdown">
+                    <input type="text" id="location-search" placeholder="Konum ara..." autocomplete="off" aria-label="Konum ara">
+                    <div id="search-results" class="search-results" role="listbox" aria-label="Konum sonuçları"></div>
+                </div>
+            </div>
+
+            <div class="iftar-time">
+                <i class="fas fa-moon" aria-hidden="true"></i>
+                <span id="time-text"></span>
+            </div>
+        </div>
+
+        <div class="spinner" id="spinner" aria-hidden="true"></div>
+
+        <section class="countdown-container" aria-live="polite">
+            <div class="result" id="countdown-title">
+                <span id="countdown-type">İftar</span> vaktine kalan süre
+            </div>
+
+            <div class="time-blocks">
+                <div class="time-block">
+                    <div class="time-value" id="hours">00</div>
+                    <div class="time-label">Saat</div>
+                </div>
+
+                <div class="time-separator">:</div>
+
+                <div class="time-block">
+                    <div class="time-value" id="minutes">00</div>
+                    <div class="time-label">Dakika</div>
+                </div>
+
+                <div class="time-separator">:</div>
+
+                <div class="time-block">
+                    <div class="time-value" id="seconds">00</div>
+                    <div class="time-label">Saniye</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div id="iftar-now" class="iftar-now hidden" aria-live="assertive">İftar Vakti!</div>
+            <div>Şüphesiz her zorlukla, bir kolaylık vardır. (94:5)</div>
+            <span id="current-date"></span> | <span><a href="https://github.com/donmezs/iftarn" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a></span>
+        </footer>
+    </main>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Tema değiştir" style="position: fixed; bottom: 20px; left: 20px; padding: 10px; border-radius: 50%; background: var(--primary-color); color: white; border: none; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <i class="fas fa-moon" id="theme-icon" aria-hidden="true"></i>
+    </button>
+
+    <button id="info-toggle" class="info-toggle" aria-label="Bilgi" style="position: fixed; bottom: 20px; left: 70px; padding: 10px; border-radius: 50%; background: var(--primary-color); color: white; border: none; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <i class="fas fa-info" id="info-icon" aria-hidden="true"></i>
+    </button>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
