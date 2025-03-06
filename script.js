@@ -9,6 +9,7 @@ const DEFAULT_LOCATION = {
 const TURKISH_CITIES_DATA_PATH = 'data/locations.json';
 const USER_AGENT = 'iftar Web Client / 1.0';
 const THEME_STORAGE_KEY = 'ramazan-theme';
+const LOCATION_COOKIE_KEY = 'location';
 
 // --- DOM Element References ---
 const dom = {
@@ -615,6 +616,7 @@ async function selectLocation(locationValue, displayName) {
     state.currentLocation = locationValue;
     state.currentLocationDisplay = displayName;
     setLocationText(displayName);
+    saveLocationToCookie(locationValue);
     toggleLocationDropdown(false);
     dom.searchResults.innerHTML = '';
     updatePrayerTimesAndStartCountdown();
@@ -710,6 +712,20 @@ function toggleLocationDropdown(forceState) {
     }
 }
 
+// --- Cookie Functions ---
+
+function saveLocationToCookie(location) {
+  document.cookie = `${LOCATION_COOKIE_KEY}=${encodeURIComponent(location)}; path=/; max-age=31536000`; // 1 year
+}
+
+function getLocationFromCookie() {
+  const cookieValue = document.cookie
+    .split('; ')
+    .find(row => row.startsWith(`${LOCATION_COOKIE_KEY}=`))
+    ?.split('=')[1];
+  return cookieValue ? decodeURIComponent(cookieValue) : null;
+}
+
 // --- Event Listeners ---
 
 function setupEventListeners() {
@@ -745,8 +761,14 @@ function setupEventListeners() {
 // --- Initialization ---
 /** Initializes the application. */
 async function initApp() {
-    updateCurrentDate();
-    await detectLocation();
+    const savedLocation = getLocationFromCookie();
+    if (savedLocation) {
+      state.currentLocation = savedLocation;
+      state.currentLocationDisplay = savedLocation.split(', ')[0];
+      setLocationText(state.currentLocationDisplay);
+    } else {
+      await detectLocation();
+    }
     await updatePrayerTimesAndStartCountdown();
     await fetchTurkishLocations();
     initTheme();
