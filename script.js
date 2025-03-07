@@ -10,6 +10,8 @@ const TURKISH_CITIES_DATA_PATH = 'data/locations.json';
 const USER_AGENT = 'iftar Web Client / 1.0';
 const THEME_STORAGE_KEY = 'ramazan-theme';
 const LOCATION_COOKIE_KEY = 'location';
+const LOCATION_CACHE_KEY = 'location-cache';
+const LOCATION_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
 // --- DOM Element References ---
 const dom = {
@@ -215,164 +217,218 @@ function toggleTheme() {
     applyTheme(newTheme);
 }
 
-// --- Location Functions ---
+// --- New Location Detection System ---
 
 /**
- * Detects the user's location using either browser geolocation or IP-based lookup.
- * Attempts browser geolocation first; falls back to IP-based location on failure.
+ * Detects user location using browser geolocation or IP fallback
+ * @returns {Promise<{city: string, country: string}>} Location object
  */
 async function detectLocation() {
-    showLoading();
-    try {
-        const location = await getLocation();
-        await processGeolocation(location);
-    } catch (error) {
-        console.error('Failed to get location:', error);
-        await getLocationFromIp(); // Fallback to IP
-    } finally {
-        hideLoading();
-    }
+  console.log('Starting location detection...');
+  try {
+    // Try browser geolocation first
+    const position = await getBrowserGeolocation();
+    console.log('Got browser geolocation:', position);
+    const location = await reverseGeocode(position.coords);
+    console.log('Reverse geocoded location:', location);
+    return location;
+  } catch (error) {
+    console.log('Geolocation failed, falling back to IP detection:', error);
+    return getLocationFromIP();
+  }
 }
 
-function getLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error('Geolocation is not supported by your browser'));
-            return;
-        }
+/**
+ * Gets precise location using browser geolocation API
+ * @returns {Promise<GeolocationPosition>}
+ */
+function getBrowserGeolocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
 
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000, // 10 seconds
-            maximumAge: 0
-        };
+    navigator.geolocation.getCurrentPosition(
+      position => resolve(position),
+      error => reject(error),
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  });
+}
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                });
-            },
-            (error) => {
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        reject(new Error('User denied the request for Geolocation.'));
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        reject(new Error('Location information is unavailable.'));
-                        break;
-                    case error.TIMEOUT:
-                        reject(new Error('The request to get user location timed out.'));
-                        break;
-                    default:
-                        reject(new Error('An unknown error occurred.'));
-                }
-            },
-            options
-        );
+/**
+ * Reverse geocodes coordinates to get city/country
+ * @param {GeolocationCoordinates} coords 
+ * @returns {Promise<{city: string, country: string}>}
+ */
+async function reverseGeocode(coords) {
+  console.log('Starting reverse geocoding...');
+  const url = `${GEOCODING_URL}lat=${coords.latitude}&lon=${coords.longitude}`;
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT }
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('Geocoding response:', data);
+
+    if (!data.address) {
+      throw new Error('Geocoding failed');
+    }
+
+    // Extract city name, handling 'Merkez' and district names
+    let city = data.address.city || data.address.town || data.address.village;
+    if (city && city.includes('Merkez')) {
+      city = city.replace('Merkez', '').trim();
+    }
+
+    return {
+      city: city,
+      country: data.address.country
+    };
+  } catch (error) {
+    console.error('Reverse geocoding failed:', error);
+    throw error;
+  }
 }
 
 /**
- * Processes geolocation data to determine the city and updates the UI.
- * @param {Object} location - Geolocation data from the browser.
+ * Gets location from IP address as fallback
+ * @returns {Promise<{city: string, country: string}>}
  */
-async function processGeolocation(location) {
-    const { latitude, longitude } = location;
-    try {
-        const response = await fetch(`${GEOCODING_URL}lat=${latitude}&lon=${longitude}&zoom=10&accept-language=tr`);
-        const data = await response.json();
-
-        if (data && data.address) {
-            const city = data.address.city || data.address.town || data.address.village || '';
-            const state = data.address.state || '';
-            const country = data.address.country || '';
-
-            state.currentLocationDisplay = city;
-            if (state && state !== city) {
-                state.currentLocationDisplay += `, ${state}`;
-            }
-            state.currentLocation = `${city}, ${country}`;
-            setLocationText(state.currentLocationDisplay);
-        } else {
-          console.error('Invalid geocoding response:', data);
-          setDefaultLocation(); // Fallback to default
-        }
-    } catch (error) {
-        console.error('Error in reverse geocoding:', error);
-        setDefaultLocation(); // Fallback to default
+async function getLocationFromIP() {
+  console.log('Starting IP-based location detection...');
+  try {
+    const cached = getCachedLocation();
+    if (cached) {
+      console.log('Using cached location:', cached);
+      return cached;
     }
+
+    const response = await fetch(IP_API_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('IP API response:', data);
+
+    if (data.status !== 'success') {
+      throw new Error('IP location failed');
+    }
+
+    const location = {
+      city: data.city,
+      country: data.country
+    };
+
+    cacheLocation(location);
+    return location;
+  } catch (error) {
+    console.error('IP location failed:', error);
+    return DEFAULT_LOCATION;
+  }
 }
 
-/**
- * Retrieves the user's location based on their IP address as a fallback.
- */
-async function getLocationFromIp() {
-    try {
-        const response = await fetch(IP_API_URL);
-        const data = await response.json();
+// --- Location Caching ---
 
-        if (data && data.status === 'success') {
-            state.currentLocationDisplay = data.city;
-            state.currentLocation = `${data.city}, ${data.country}`;
-            setLocationText(state.currentLocationDisplay);
-        } else {
-            console.error('Failed to fetch location from IP API:', data);
-            setDefaultLocation();
-        }
-    } catch (error) {
-        console.error('Error fetching location from IP API:', error);
-        setDefaultLocation();
-    }
+function cacheLocation(location) {
+  const cache = {
+    location,
+    timestamp: Date.now()
+  };
+  localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(cache));
 }
 
-/** Sets the location to a default value (Istanbul). */
-function setDefaultLocation() {
-  state.currentLocation = DEFAULT_LOCATION.value;
-  state.currentLocationDisplay = DEFAULT_LOCATION.display;
-  setLocationText(state.currentLocationDisplay);
+function getCachedLocation() {
+  const cache = localStorage.getItem(LOCATION_CACHE_KEY);
+  if (!cache) return null;
+
+  const { location, timestamp } = JSON.parse(cache);
+  if (Date.now() - timestamp > LOCATION_CACHE_EXPIRY) {
+    localStorage.removeItem(LOCATION_CACHE_KEY);
+    return null;
+  }
+
+  return location;
 }
 
 // --- Prayer Time Functions ---
 
 /** Fetches prayer times for the given location. */
 async function getPrayerTimes(location) {
-    const currentDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).split('/').join('-');
-    const url = `${API_URL}${currentDate}?address=${location}&method=13&school=1&calendarMethod=DIYANET`;
-    const headers = { "User-Agent": USER_AGENT };
+  if (!location || typeof location !== 'string') {
+    throw new Error('Invalid location provided');
+  }
 
+  // Append ', Turkey' to the location for API but keep original for display
+  const apiLocation = `${location.trim()}, Turkey`;
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  const encodedLocation = encodeURIComponent(apiLocation.replace(/İ/g, 'I')); // Handle Turkish İ
+
+  const primaryUrl = `${API_URL}${formattedDate}?address=${encodedLocation}&method=13&school=1&calendarMethod=DIYANET`;
+  const fallbackUrl = `https://api.aladhan.com/v1/timingsByCity?date=${formattedDate}&city=${encodedLocation}&country=Turkey&method=13&school=1`;
+
+  const MAX_RETRIES = 3;
+  const INITIAL_TIMEOUT = 5000;
+  const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-          throw new Error(`API request failed with status code ${response.status}`);
+      const url = attempt === 1 ? primaryUrl : fallbackUrl;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), INITIAL_TIMEOUT * attempt);
+
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': USER_AGENT
         }
-        const data = await response.json();
-        if (data && data.data && data.data.timings) {
-            return data.data.timings;
-        } else {
-          throw new Error("Invalid response format from API");
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 400 && errorData.data === 'Please specify a valid address.' && attempt < MAX_RETRIES) {
+          console.warn(`Attempt ${attempt} failed with invalid address. Trying fallback...`);
+          continue;
         }
+        throw new Error(`API request failed: ${errorData.data || response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data || !data.data || !data.data.timings) {
+        throw new Error('Invalid API response format');
+      }
+      return data.data.timings;
     } catch (error) {
-      console.error('Error fetching prayer times:', error);
-      return { error: error.message };
+      if (attempt === MAX_RETRIES) {
+        throw new Error(`Failed to fetch prayer times: ${error.message}`);
+      }
+      await new Promise(resolve => setTimeout(resolve, INITIAL_TIMEOUT * attempt));
     }
+  }
 }
 
 /** Updates prayer times and starts/restarts the countdown. */
 async function updatePrayerTimesAndStartCountdown() {
-    if (!state.currentLocation) {
-      console.warn('Current location not set. Cannot update prayer times.');
+    const location = dom.locationText.textContent.trim();
+    if (!location) {
+      console.warn('Location text is empty. Cannot update prayer times.');
       return;
     }
     showLoading();
     try {
-      state.prayerTimes = await getPrayerTimes(state.currentLocation);
-      if (state.prayerTimes.error) {
-        dom.timeText.textContent = 'Vakitler alınamadı';
-        return;
-      }
-      determineTargetTime();  // This will also start the countdown.
+      state.prayerTimes = await getPrayerTimes(location);
+      determineTargetTime();
       updateTimeText();
     } catch (error) {
       console.error('Error updating prayer times:', error);
@@ -758,24 +814,42 @@ function setupEventListeners() {
     });
 }
 
-// --- Initialization ---
-/** Initializes the application. */
+// --- App Initialization ---
+
 async function initApp() {
-    const savedLocation = getLocationFromCookie();
-    if (savedLocation) {
-      state.currentLocation = savedLocation;
-      state.currentLocationDisplay = savedLocation.split(', ')[0];
-      setLocationText(state.currentLocationDisplay);
-    } else {
-      await detectLocation();
-    }
+  // Initialize theme
+  initTheme();
+
+  // Setup event listeners
+  setupEventListeners();
+
+  // Initialize UI elements
+  captureOriginalStyles();
+  setupInfoToggle();
+  updateCurrentDate();
+
+  // Start location detection and fetch Turkish locations concurrently
+  try {
+    showLoading();
+    await Promise.all([
+      (async () => {
+        try {
+          const location = await detectLocation();
+          state.currentLocation = `${location.city}, ${location.country}`;
+          state.currentLocationDisplay = location.city;
+          setLocationText(location.city);
+        } catch (error) {
+          console.error('Location detection failed:', error);
+          setLocationText(DEFAULT_LOCATION.display);
+          state.currentLocation = DEFAULT_LOCATION.value;
+        }
+      })(),
+      fetchTurkishLocations()
+    ]);
     await updatePrayerTimesAndStartCountdown();
-    await fetchTurkishLocations();
-    initTheme();
-    captureOriginalStyles();
-    setupInfoToggle();
-    setupEventListeners();
-    setInterval(determineTargetTime, 60000); // Update target time every minute.
+  } finally {
+    hideLoading();
+  }
 }
 
 // Start the app.
